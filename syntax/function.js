@@ -4,6 +4,8 @@ function test(){
     console.log(3);
 }
 
+function sum(first, second){
+    return first+second;
+}
 
-test();
-test();
+console.log(sum(2, 4));
