@@ -2,6 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var qs = require('querystring');
 var template = require('./lib/template.js');
+var path = require('path');
 
 // url이라는 모듈을 사용 할 것이다.
 var url = require('url');
@@ -28,7 +29,8 @@ var app = http.createServer(function(request,response){
       }
       else{
         fs.readdir('./data', function(err, filelist){
-          fs.readFile(`data/${queryDate.id}`, 'utf8', function(err, data){
+          var filterID = path.parse(queryDate.id).base;
+          fs.readFile(`data/${filterID}`, 'utf8', function(err, data){
             var title = queryDate.id;
             var list = template.list(filelist);
             var description = data;
@@ -86,7 +88,8 @@ var app = http.createServer(function(request,response){
     else if(pathname === `/update`){
       fs.readdir('./data', function(error, filelist){
         var list = template.list(filelist);
-        fs.readFile(`data/${queryDate.id}`, 'utf8', function(err, data){
+        var filterID = path.parse(queryDate.id).base;
+        fs.readFile(`data/${filterID}`, 'utf8', function(err, data){
           var title = queryDate.id;
           var description = data;
           var html = template.html(title, list, `
@@ -136,7 +139,8 @@ var app = http.createServer(function(request,response){
       request.on('end', function(){
         var post = qs.parse(body);
         var id = post.id;
-        fs.unlink(`data/${id}`, function(error){
+        var filterID = path.parse(id).base;
+        fs.unlink(`data/${filterID}`, function(error){
           response.writeHead(302, {Location: `/` });
           response.end();
         });
