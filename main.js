@@ -5,7 +5,7 @@ var qs = require('querystring');
 // url이라는 모듈을 사용 할 것이다.
 var url = require('url');
 
-function templateHTML(title, list, body){
+function templateHTML(title, list, body, control){
   return `
           <!doctype html>
           <html>
@@ -16,7 +16,7 @@ function templateHTML(title, list, body){
           <body>
             <h1><a href="/">WEB</a></h1>
             ${list}
-            <a href="/create">create</a>
+            ${control}
             <h2>${title}</h2>
             ${body}
           </body>
@@ -51,7 +51,8 @@ var app = http.createServer(function(request,response){
           var list = templateList(filelist);
           var title = 'Welcome';
           var description = 'Hello';
-          var template = templateHTML(title, list, `${description}`);
+          var template = templateHTML(title, list, `${description}`,
+          `<a href="/create">create</a>`);
           
           response.writeHead(200);
           response.end(template);
@@ -59,12 +60,12 @@ var app = http.createServer(function(request,response){
       }
       else{
         fs.readdir('./data', function(err, filelist){
-          var list = templateList(filelist);
-          
           fs.readFile(`data/${queryDate.id}`, 'utf8', function(err, data){
             var title = queryDate.id;
+            var list = templateList(filelist);
             var description = data;
-            var template = templateHTML(title, list, `${description}`);
+            var template = templateHTML(title, list, `${description}`,
+            `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
       
             response.writeHead(200);
             response.end(template);
@@ -77,7 +78,7 @@ var app = http.createServer(function(request,response){
         var list = templateList(filelist);
         var title = 'WEB - CREATE';
         var template = templateHTML(title, list, `
-          <form action="http://localhost:3001/create_process" method="post">
+          <form action="/create_process" method="post">
             <p><input type="text" name="title" placeholder="title"></p>
             <p>
                 <textarea name="description" placeholder="description"></textarea>
@@ -86,7 +87,7 @@ var app = http.createServer(function(request,response){
                 <input type="submit">
             </p>
           </form>
-        `);
+        `, '');
         
         response.writeHead(200);
         response.end(template);
@@ -107,6 +108,31 @@ var app = http.createServer(function(request,response){
             response.end();
           });
         });
+    }
+    else if(pathname === `/update`){
+      fs.readdir('./data', function(error, filelist){
+        var list = templateList(filelist);
+        fs.readFile(`data/${queryDate.id}`, 'utf8', function(err, data){
+          var title = queryDate.id;
+          var description = data;
+          var template = templateHTML(title, list, `
+          <form action="/update_process" method="post">
+            <input type="hidden" name="id" value="${title}">
+            <p><input type="text" name="title" value="${title}"></p>
+            <p>
+                <textarea name="description">${description}</textarea>
+            </p>
+            <p>
+                <input type="submit">
+            </p>
+          </form>
+          `,
+          `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+    
+          response.writeHead(200);
+          response.end(template);
+        });
+      });
     }
     else{
       response.writeHead(404);
