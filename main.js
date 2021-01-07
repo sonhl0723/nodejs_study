@@ -3,6 +3,7 @@ var fs = require('fs');
 var qs = require('querystring');
 var template = require('./lib/template.js');
 var path = require('path');
+var sanitizeHTML = require('sanitize-html');
 
 // url이라는 모듈을 사용 할 것이다.
 var url = require('url');
@@ -34,11 +35,15 @@ var app = http.createServer(function(request,response){
             var title = queryDate.id;
             var list = template.list(filelist);
             var description = data;
-            var html = template.html(title, list, `${description}`,
+
+            var sanitizedTitle = sanitizeHTML(title);
+            var sanitizedDescription = sanitizeHTML(description);
+
+            var html = template.html(title, list, `${sanitizedDescription}`,
             `<a href="/create">create</a>
-            <a href="/update?id=${title}">update</a>
+            <a href="/update?id=${sanitizedTitle}">update</a>
             <form action="/delete_process" method="post">
-              <input type="hidden" name="id" value="${title}">
+              <input type="hidden" name="id" value="${sanitizedTitle}">
               <input type="submit" value="delete">
             </form>
             `);
@@ -92,19 +97,23 @@ var app = http.createServer(function(request,response){
         fs.readFile(`data/${filterID}`, 'utf8', function(err, data){
           var title = queryDate.id;
           var description = data;
+
+          var sanitizedTitle = sanitizeHTML(title);
+          var sanitizedDescription = sanitizeHTML(description);
+
           var html = template.html(title, list, `
           <form action="/update_process" method="post">
-            <input type="hidden" name="id" value="${title}">
-            <p><input type="text" name="title" value="${title}"></p>
+            <input type="hidden" name="id" value="${sanitizedTitle}">
+            <p><input type="text" name="title" value="${sanitizedTitle}"></p>
             <p>
-                <textarea name="description">${description}</textarea>
+                <textarea name="description">${sanitizedDescription}</textarea>
             </p>
             <p>
                 <input type="submit">
             </p>
           </form>
           `,
-          `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+          `<a href="/create">create</a> <a href="/update?id=${sanitizedTitle}">update</a>`);
     
           response.writeHead(200);
           response.end(html);
